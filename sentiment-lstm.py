@@ -19,7 +19,21 @@ words = all_text.split()
 
 # print(all_text) 
 
-print(reviews)
+# print(reviews)
 
 
 # print(words)
+from collections import Counter
+counts = Counter(words)
+vocab=sorted(counts, key=counts.get, reverse=True) #get words by desc
+
+# print(vocab)
+vocab_to_int = {word:ii for ii,word in enumerate(vocab,1)} # get key and value by enumerate
+# print(vocab_to_int) 
+
+reviews_int=[]
+for each in reviews:
+    reviews_int.append([vocab_to_int[word] for word in each.split()])
+
+print(reviews_int)
+

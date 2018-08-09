@@ -46,23 +46,43 @@ review_lens =Counter([len(x) for x in reviews_int])
 # print(max(review_lens))
 non_zero_idx = [ii for ii, review in enumerate(reviews_int) if len(review)!=0]
 
-revies_int = [reviews_int[ii] for ii in non_zero_idx]
+reviews_int = [reviews_int[ii] for ii in non_zero_idx] # get non zero value
 labels = np.array([labels[ii] for ii in non_zero_idx])
 # print(len(non_zero_idx))
 # print(reviews_int[-1])
 seq_len = 200
-features =np.zeros((len(reviews_int), seq_len),dtype=int)
+features = np.zeros((len(reviews_int), seq_len),dtype=int)
 
 for i, row in enumerate(reviews_int):
     features[i,-len(row):]=np.array(row)[:seq_len]
 
 
+# print(features[:10,:100])
 
 
 
+# split data for training and validation and test 
 
 
-print(features[:10,:100])
+
+split_frac = 0.8
+split_idx = int(len(features)*0.8) 
+
+
+train_x, val_x = features[:split_idx], features[split_idx:]
+train_y, val_y =labels[:split_idx], labels[split_idx:]
+
+test_idx = int(len(val_x)*0.5)
+
+val_x, test_x = val_x[:test_idx], val_x[test_idx:]
+val_y, test_y = val_y[:test_idx], val_y[test_idx:] 
+
+print("Train set: \t\t{}".format(train_x.shape))
+
+print("Validation set: \t{}".format(val_x.shape))
+
+print("Test set: \t{}".format(test_x.shape))
+
 
 
 

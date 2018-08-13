@@ -21,7 +21,6 @@ words = all_text.split()
 
 # print(reviews)
 
-
 # print(words)
 from collections import Counter
 counts = Counter(words)
@@ -58,12 +57,7 @@ for i, row in enumerate(reviews_int):
 
 
 # print(features[:10,:100])
-
-
-
 # split data for training and validation and test 
-
-
 
 split_frac = 0.8
 split_idx = int(len(features)*0.8) 
@@ -82,6 +76,33 @@ print("Train set: \t\t{}".format(train_x.shape))
 print("Validation set: \t{}".format(val_x.shape))
 
 print("Test set: \t{}".format(test_x.shape))
+
+
+# graph definition
+
+lstm_size = 256
+lstm_layers = 1
+batch_size = 500
+learning_rate = 0.001
+
+n_words = len(vocab_to_int) + 1
+
+graph = tf.Graph()
+with graph.as_default():
+    inputs_=tf.placeholder(tf.int32,[None,None],name='inputs')
+    labels_=tf.placeholder(tf,int32,[None,None],name='labels')
+    keep_prob = tf.placeholder(tf.float32,name='keep_prob')
+
+embed_size=300
+
+with graph.as_default():
+    embedding = tf.Variable(tf.random_uniform((n_words,embed_size),-1,1))
+    embed = tf.nn.embedding_lookup(embedding, inputs_) # if you input embedding input-value, return word vector
+
+
+
+
+
 
 
 

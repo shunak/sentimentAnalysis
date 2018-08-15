@@ -100,6 +100,39 @@ with graph.as_default():
     embed = tf.nn.embedding_lookup(embedding, inputs_) # if you input embedding input-value, return word vector
 
 
+# define LSTM Cell and Layer
+
+with graph.as_default():
+    lstm = tf.contrib.rnn.BasicLSTMCellLSTM(lstm_size)
+    drop = tf.contrib.rnn.DropoutWrapper(lstm,output_keep_prob=keep_prob)
+    cell = tf.contrib.rnn.MultiRNNCell([drop]*lstm_layers) # results of drop*lstm_layer 
+    initial_state = cell.zero_state(batch_size,tf.float32) # initalize cell
+
+    # def of output
+with graph.as_default():
+    outputs, final_state = tf.nn.dynamic_rnn(cell,embed,initial_state=initial_state)
+
+# prediction
+with graph.as_default():
+    predictions = tf.contrib.lstm_layers.fully_connected(outputs[:,-1],1,activation_fn=tf.sigmoid)
+    cost = tf.losses.mean_squared_error(labels_,predictions) # calc of cost function 
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
+
+    # calc of learning accuracy
+
+with graph.as_default():
+    correct_pred = tf.equal(tf.cast(tf.round(predictions),tf.int32),labels_)
+    accuracy = tf.reduce_mean(tf.cast(correct_pred,tf.float32))
+
+# make batch module 
+def get_batches(x,y,batch_size=100):
+    n_batches = len(x)//batch_size
+    x,y = x[:n_batches*batch_size],y[:n_batches*batch_size]
+    for ii in range(0,len(x), batch_size):
+        yield x[ii:ii+batch_size],y[ii:ii*batch_size]
+        
+
+    
 
 
 

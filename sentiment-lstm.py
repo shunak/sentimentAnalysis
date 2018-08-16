@@ -71,11 +71,11 @@ test_idx = int(len(val_x)*0.5)
 val_x, test_x = val_x[:test_idx], val_x[test_idx:]
 val_y, test_y = val_y[:test_idx], val_y[test_idx:] 
 
-print("Train set: \t\t{}".format(train_x.shape))
+# print("Train set: \t\t{}".format(train_x.shape))
 
-print("Validation set: \t{}".format(val_x.shape))
+# print("Validation set: \t{}".format(val_x.shape))
 
-print("Test set: \t{}".format(test_x.shape))
+# print("Test set: \t{}".format(test_x.shape))
 
 
 # graph definition
@@ -90,7 +90,7 @@ n_words = len(vocab_to_int) + 1
 graph = tf.Graph()
 with graph.as_default():
     inputs_=tf.placeholder(tf.int32,[None,None],name='inputs')
-    labels_=tf.placeholder(tf,int32,[None,None],name='labels')
+    labels_=tf.placeholder(tf.int32,[None,None],name='labels')
     keep_prob = tf.placeholder(tf.float32,name='keep_prob')
 
 embed_size=300
@@ -103,7 +103,7 @@ with graph.as_default():
 # define LSTM Cell and Layer
 
 with graph.as_default():
-    lstm = tf.contrib.rnn.BasicLSTMCellLSTM(lstm_size)
+    lstm = tf.contrib.rnn.BasicLSTMCell(lstm_size)
     drop = tf.contrib.rnn.DropoutWrapper(lstm,output_keep_prob=keep_prob)
     cell = tf.contrib.rnn.MultiRNNCell([drop]*lstm_layers) # results of drop*lstm_layer 
     initial_state = cell.zero_state(batch_size,tf.float32) # initalize cell
@@ -114,8 +114,8 @@ with graph.as_default():
 
 # prediction
 with graph.as_default():
-    predictions = tf.contrib.lstm_layers.fully_connected(outputs[:,-1],1,activation_fn=tf.sigmoid)
-    cost = tf.losses.mean_squared_error(labels_,predictions) # calc of cost function 
+    predictions = tf.contrib.layers.fully_connected(outputs[:,-1],1,activation_fn=tf.sigmoid)
+    cost = tf.losses.mean_squared_error(labels_,predictions)  
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
     # calc of learning accuracy
@@ -130,7 +130,44 @@ def get_batches(x,y,batch_size=100):
     x,y = x[:n_batches*batch_size],y[:n_batches*batch_size]
     for ii in range(0,len(x), batch_size):
         yield x[ii:ii+batch_size],y[ii:ii*batch_size]
-        
+
+# training 
+epochs = 10
+with graph.as_default():
+    saver = tf.train.Saver()
+
+with tf.Session(graph=graph) as sess:
+    sess.run(tf.global_variables_initializer())
+    iteration = 1
+    for e in range(epochs):
+        state = sess.run(initial_state)
+        for ii, (x,y) in enumerate(get_batches(train_x,train_y,batch_size),1):
+            feed ={inputs_: x,
+                    labels_:y[:,None],
+                    keep_prob:0.5,
+                    initial_state:state}
+            loss,state,_ = sess.run([cost,final_state,optimizer],feed_dict=feed)
+
+            if iteration%5==0:
+                print("Epoch{}/{}".format(e,epochs),
+                "Iteration: []".format(iteration),
+                "Training Loss: {:.3f}".format(loss))
+
+            if iteration%25==0:
+                val_acc = []
+                val_state = sess.run(cell.zero_state(batch_size,tf.float32))
+                for x,y in get_batches(val_x,val_y,batch_size):
+                    feed = {inputs_ :x,
+                            labels_:y[:,None],
+                            keep_prob:1, # No Dropout
+                            initial_state: val_state}
+                    
+                    batch_acc, val_state = sess.run([accuracy, final_state],feed_dict=feed)
+                    val_acc.append(batch_acc)
+                print("Value Acc: {:.3f}".format(np.mean(val_acc)))
+        iteration+=1
+    saver.save(sess,"checkpoint/sentiment.ckpt")
+
 
     
 

@@ -1,4 +1,3 @@
-# emotion analysys by RNN 
 import numpy as np
 import tensorflow as tf
 with open('./reviews.txt','r') as f: # open this directory file as readonly and make referable as f
@@ -149,9 +148,9 @@ with tf.Session(graph=graph) as sess:
             loss,state,_ = sess.run([cost,final_state,optimizer],feed_dict=feed)
 
             if iteration%5==0:
-                print("Epoch{}/{}".format(e,epochs),
-                "Iteration: []".format(iteration),
-                "Training Loss: {:.3f}".format(loss))
+                print("Epoch:{}/{}".format(e, epochs),
+                     "Iteration:{}".format(iteration),
+                     "Training Loss: {:.3f}".format(loss))
 
             if iteration%25==0:
                 val_acc = []
@@ -161,22 +160,8 @@ with tf.Session(graph=graph) as sess:
                             labels_:y[:,None],
                             keep_prob:1, # No Dropout
                             initial_state: val_state}
-                    
                     batch_acc, val_state = sess.run([accuracy, final_state],feed_dict=feed)
                     val_acc.append(batch_acc)
                 print("Value Acc: {:.3f}".format(np.mean(val_acc)))
-        iteration+=1
+            iteration+=1
     saver.save(sess,"checkpoint/sentiment.ckpt")
-
-
-    
-
-
-
-
-
-
-
-
-
-
